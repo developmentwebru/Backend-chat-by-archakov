@@ -1,10 +1,17 @@
 import express from "express";
 import {MessageModel} from "../models";
 /*import { createJWToken } from "../utils";*/
+import socket from "socket.io";
 
 class MessageController {
-    index(req: any, res: express.Response) {
-        const dialogId = req.query.dialog;
+    io: socket.Server;
+
+    constructor(io: socket.Server) {
+        this.io = io;
+    }
+
+    index = (req: express.Request, res: express.Response) => {
+        const dialogId  = req.query.dialog;
 
         MessageModel.find({dialog: dialogId})
             .populate(["dialog"])
@@ -24,8 +31,8 @@ class MessageController {
         // TODO: Сделать возвращение инфы о самом себе (аутентификация)
     }
 
-   create(req: express.Request, res: express.Response) {
-        const userId = '601d13f4a627b85738b27df9'
+   create(req: any, res: express.Response) {
+        const userId = req.user._id;
 
         const postData = {
             dialog: req.body.dialog_id,

@@ -5,11 +5,7 @@ export interface IMessage extends Document {
         type: string;
         require: boolean;
     };
-    dialog: {
-        type: Schema.Types.ObjectId;
-        ref: string;
-        require: true;
-    };
+    dialog: any[];
     unread: {
         type: boolean;
         defaul: boolean;

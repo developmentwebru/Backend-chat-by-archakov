@@ -1,15 +1,24 @@
 import express from "express";
 import {DialogModel, MessageModel} from "../models";
 import {NativeError} from "mongoose";
-/*import { createJWToken } from "../utils";*/
+
+import socket from "socket.io";
+
+
 
 class DialogController {
-    index(req: express.Request, res: express.Response) {
-        const authorId = '601d13f4a627b85738b27df9';
+    io: socket.Server;
+
+    constructor(io: socket.Server) {
+        this.io = io;
+    }
+
+    index = (req: any, res: express.Response) => {
+        const authorId = req.user._id;
         DialogModel.find({ author: authorId })
             .populate(["author", "partner"])
             .exec(function(err, dialogs) {
-                console.log(err);
+
                 if (err) {
                     return res.status(404).json({
                         message: "Dialogs not found"

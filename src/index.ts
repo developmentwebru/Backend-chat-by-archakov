@@ -1,39 +1,22 @@
-import mongoose from 'mongoose';
 import express  from 'express';
+import dotenv from 'dotenv';
+import socket from 'socket.io'
+import {createServer as httpServer} from 'http'
 
-import bodyParser from "body-parser";
-import {UserController, DialogController, MessageController} from "./controllers";
-
+import './core/db'
+import createRoutes from "./core/routes";
 const app = express();
+const http = httpServer(app);
+const io = socket(http);
+dotenv.config();
 
-app.use(bodyParser.json());
-const User =new UserController();
-const Dialog =new DialogController();
-const Messages =new MessageController();
+createRoutes(app, io);
 
-mongoose.connect('', {
-    useNewUrlParser: true,
-    useFindAndModify: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-} ).then(
-    () => { /** ready to use. The `mongoose.connect()` promise resolves to mongoose instance. */ },
-    err => { console.log(err)}
-);
+io.on('connection',  (socket: any) => {
+    console.log('Connected!!!');
+    socket.emit('test command', "dfs dslfkja lj");
+});
 
-app.get('/user/:id', User.show);
-app.delete("/user/:id", User.delete);
-app.post("/user/registration", User.create);
-
-app.get('/dialogs', Dialog.index);
-app.post("/dialogs", Dialog.create);
-app.delete("/dialog/:id", Dialog.delete);
-
-app.get('/messages', Messages.index);
-app.post("/messages", Messages.create);
-app.delete("/messages/id", Messages.delete);
-
-
-app.listen(3000, function() {
-    console.log("Example app listening on port 3000!");
+http.listen(process.env.PORT, function() {
+    console.log(`Example app listening on http://localhost:${process.env.PORT}`);
 });

@@ -1,22 +1,52 @@
 import express from "express";
+import { validationResult } from 'express-validator';
 import { UserModel } from "../models";
-/*import { createJWToken } from "../utils";*/
+import { IUser } from "../models/User";
+import bcrypt from 'bcrypt';
+import { createJWToken, generatePasswordHash  } from "../utils";
+import socket from "socket.io";
+
+
+
+
 
 class UserController {
-    show(req: express.Request, res: express.Response) {
+    io: socket.Server;
+    constructor(io: socket.Server) {
+        this.io = io;
+    }
+    // TODO: В конструкторе следить за методоами сокета относящихся к юзеру и вызывать соотв. методы
+    // constructor() {
+    //   io.on("connection", function(socket: any) {
+    //     socket.on('', function(obj: any) {
+    //       // Вызывать метод для создания сущности
+    //     })
+    //   });
+    // }
+
+    show = (req: express.Request, res: express.Response) => {
         const id: string = req.params.id;
         UserModel.findById(id, (err:any, user:any) => {
             if (err) {
                 return res.status(404).json({
-                    message: "User not found"
+                    message: 'User not found'
                 });
             }
             res.json(user);
         });
     }
 
-    getMe() {
-        // TODO: Сделать возвращение инфы о самом себе (аутентификация)
+    getMe(req: any, res: express.Response) {
+        const id: string = req.user._id;
+        UserModel.findById(id, (err:any, user:any) => {
+            if (err) {
+                return res.status(404).json({
+                    message: 'User not found'
+                });
+            }
+            res.json(user);
+        });
+
     }
 
     create(req: express.Request, res: express.Response) {
@@ -42,7 +72,7 @@ class UserController {
             .then(user => {
                 if (user) {
                     res.json({
-                        message: `User ${user.fullname} deleted`
+                        message: `User ${user.fullname} deleted`,
                     });
                 }
             })
@@ -51,6 +81,41 @@ class UserController {
                     message: `User not found`
                 });
             });
+    }
+
+    login(req: express.Request, res: express.Response) {
+        const postData = {
+            email: req.body.email,
+            password: req.body.password
+        };
+
+       const errors =validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(404).json({errors: errors.array()});
+        }
+
+        UserModel.findOne({ email: postData.email }, (err: any, user: any) => {
+            if (err) {
+                return res.status(404).json({
+                    message: "User not found"
+                });
+            }
+
+
+
+            if (bcrypt.compareSync(postData.password, user.password)) {
+                const token = createJWToken(user);
+                res.json({
+                    status: 'success',
+                    token,
+                });
+            } else {
+                res.json({
+                    status: 'error',
+                    message: 'Incorrect password or email',
+                });
+            }
+        });
     }
 }
 
