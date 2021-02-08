@@ -1,6 +1,6 @@
 import express from "express";
 import {MessageModel} from "../models";
-/*import { createJWToken } from "../utils";*/
+
 import socket from "socket.io";
 
 class MessageController {
@@ -31,7 +31,7 @@ class MessageController {
         // TODO: Сделать возвращение инфы о самом себе (аутентификация)
     }
 
-   create(req: any, res: express.Response) {
+   create = (req: any, res: express.Response) => {
         const userId = req.user._id;
 
         const postData = {
@@ -41,15 +41,24 @@ class MessageController {
         };
         const message = new MessageModel(postData);
         message
+
             .save()
-            .then((Obj: any) => {
-                res.json(Obj);
+            .then((obj: any) => {
+                obj.populate("dialog", (err: any, message: any) => {
+                    if (err) {
+                        return res.status(500).json({
+                            message: err
+                        });
+                    }
+                    res.json(message);
+                    this.io.emit("SERVER:NEW_MESSAGE", message);
+                });
             })
             .catch(reason => {
                 res.json(reason);
             });
     }
-       delete(req: express.Request, res: express.Response) {
+       delete=(req: express.Request, res: express.Response) => {
           const id: string = req.params.id;
           MessageModel.findOneAndRemove({_id: id})
               .then(message => {

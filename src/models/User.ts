@@ -8,7 +8,7 @@ export interface IUser extends Document {
     password?: string;
     confirmed?: boolean;
     avatar?: string;
-    confirm_hash?: string;
+    confirm_hash?: any;
     last_seen?: Date;
 }
 
@@ -40,18 +40,28 @@ const UserSchema = new Schema(
         }
     },
     {
-        timestamps: true,
-    },
+        timestamps: true
+    }
 );
-UserSchema.pre('save', function(next) {
-    const user: IUser = this;
 
-    if (!user.isModified('password')) return next();
+UserSchema.pre<IUser>("save",  function (next) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const user = this;
+
+    if (!user.isModified("password")) {
+        return next();
+    }
 
     generatePasswordHash(user.password)
         .then(hash => {
             user.password = String(hash);
-            next();
+            generatePasswordHash( +new Date()).then(confirmHash => {
+                user.confirm_hash = String(confirmHash);
+                generatePasswordHash(+new Date()).then(confirmHash => {
+                    user.confirm_hash = String(confirmHash);
+                    next();
+                });
+                });
         })
         .catch(err => {
             next(err);

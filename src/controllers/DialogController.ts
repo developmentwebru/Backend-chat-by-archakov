@@ -1,7 +1,5 @@
 import express from "express";
 import {DialogModel, MessageModel} from "../models";
-import {NativeError} from "mongoose";
-
 import socket from "socket.io";
 
 
@@ -33,7 +31,7 @@ class DialogController {
         // TODO: Сделать возвращение инфы о самом себе (аутентификация)
     }
 
-    create(req: express.Request, res: express.Response) {
+    create = (req: express.Request, res: express.Response)=> {
         const postData = {
             author: req.body.author,
             partner: req.body.partner
@@ -62,7 +60,7 @@ class DialogController {
                 res.json(reason);
             });
     }
-    delete(req: express.Request, res: express.Response) {
+    delete =(req: express.Request, res: express.Response) =>{
         const id: string = req.params.id;
         DialogModel.findOneAndRemove({ _id: id })
             .then(dialog => {

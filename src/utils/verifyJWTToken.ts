@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { IUser } from "../models/User";
+
 
 export default (token: string) =>
     new Promise((resolve, reject) => {
