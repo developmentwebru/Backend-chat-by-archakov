@@ -1,5 +1,5 @@
 import express from "express";
-import {MessageModel} from "../models";
+import {MessageModel, DialogModel} from "../models";
 
 import socket from "socket.io";
 
@@ -14,7 +14,7 @@ class MessageController {
         const dialogId  = req.query.dialog;
 
         MessageModel.find({dialog: dialogId})
-            .populate(["dialog"])
+            .populate(["dialog", "user"])
             .exec(function(err, messages) {
                 console.log(err);
                 if (err) {
@@ -44,12 +44,29 @@ class MessageController {
 
             .save()
             .then((obj: any) => {
-                obj.populate("dialog", (err: any, message: any) => {
+                obj.populate(["dialog", "user"], (err: any, message: any) => {
                     if (err) {
                         return res.status(500).json({
                             message: err
                         });
                     }
+
+                    DialogModel.findOneAndUpdate(
+                        { _id: postData.dialog },
+                        { lastMessage: message._id },
+                        { upsert: true, new: true },
+                        function(err) {
+                            if (err) {
+                                return res.status(500).json({
+                                    status: "error",
+                                    message: err
+                                });
+                            }
+                        }
+                    );
+
+
+
                     res.json(message);
                     this.io.emit("SERVER:NEW_MESSAGE", message);
                 });
