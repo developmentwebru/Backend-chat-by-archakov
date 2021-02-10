@@ -46,40 +46,36 @@ const UserSchema = new Schema(
     }
 );
 
-UserSchema.virtual('isOnline').get(function (this: any) {
+
+
+UserSchema.virtual("isOnline").get(function(this: any) {
     return differenceInMinutes(new Date().toISOString(), this.last_seen) < 5;
 });
 
-UserSchema.set('toJSON', {
+UserSchema.set("toJSON", {
     virtuals: true
 });
 
+UserSchema.pre("save", function(next) {
+    const user: IUser = this;
 
-UserSchema.pre<IUser>("save",  function (next) {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const user = this;
 
-    if (!user.isModified("password")) {
-        return next();
-    }
+    if (!user.isModified("password")) return next();
 
     generatePasswordHash(user.password)
         .then(hash => {
             user.password = String(hash);
-            generatePasswordHash( +new Date()).then(confirmHash => {
+
+            generatePasswordHash(+new Date()).then(confirmHash => {
                 user.confirm_hash = String(confirmHash);
-                generatePasswordHash(+new Date()).then(confirmHash => {
-                    user.confirm_hash = String(confirmHash);
-                    next();
-                });
-                });
+                next();
+            });
         })
         .catch(err => {
             next(err);
         });
 });
 
+const UserModel = mongoose.model<IUser>("User", UserSchema);
 
-
-const UserModel = mongoose.model<IUser>('User', UserSchema);
 export default UserModel;

@@ -22,12 +22,12 @@ const createRoutes = (app: express.Express, io: socket.Server) => {
     app.use(updateLastSeen);
 
     app.get("/user/me", UserController.getMe);
-
+    app.get("/user/verify", UserController.verify);
     app.post("/user/signup", registerValidation, UserController.create);
     app.post("/user/signin", loginValidation, UserController.login);
     app.get("/user/:id", UserController.show);
     app.delete("/user/:id", UserController.delete);
-    app.get("/user/verify", UserController.verify);
+
 
     app.get("/dialogs", DialogController.index);
     app.delete("/dialogs/:id", DialogController.delete);

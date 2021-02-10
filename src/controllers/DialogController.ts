@@ -3,18 +3,20 @@ import {DialogModel, MessageModel} from "../models";
 import socket from "socket.io";
 
 
-
 class DialogController {
     io: socket.Server;
-
     constructor(io: socket.Server) {
         this.io = io;
     }
 
     index = (req: any, res: express.Response) => {
+
         const userId = req.user._id;
+
+
         DialogModel.find()
             .or([{ author: userId }, { partner: userId }])
+            .populate(["author", "partner"])
             .populate({
                 path: "lastMessage",
                 populate: {
@@ -22,7 +24,6 @@ class DialogController {
                 }
             })
             .exec(function(err, dialogs) {
-
                 if (err) {
                     return res.status(404).json({
                         message: "Dialogs not found"
@@ -30,12 +31,7 @@ class DialogController {
                 }
                 return res.json(dialogs);
             });
-    }
-
-
-    getMe() {
-        // TODO: Сделать возвращение инфы о самом себе (аутентификация)
-    }
+    };
 
     create = (req: any, res: express.Response)=> {
         const postData = {
@@ -73,7 +69,7 @@ class DialogController {
                 res.json(reason);
             });
     }
-    delete =(req: express.Request, res: express.Response) =>{
+    delete = (req: express.Request, res: express.Response) => {
         const id: string = req.params.id;
         DialogModel.findOneAndRemove({ _id: id })
             .then(dialog => {
@@ -88,8 +84,6 @@ class DialogController {
                     message: `Dialog not found`
                 });
             });
-    }
+    };
 }
-
-
 export default DialogController;

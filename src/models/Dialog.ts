@@ -6,7 +6,11 @@ export interface IDialog extends Document {
         ref: string;
         require: true;
     };
-    author: any[];
+    author:   [  {
+        type: Schema.Types.ObjectId;
+        ref: string;
+    }
+    ];
     messages: [
         {
             type: Schema.Types.ObjectId;
